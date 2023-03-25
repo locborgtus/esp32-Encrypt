@@ -16,6 +16,7 @@ void CSPIFFS::listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
 		return;
 	}
 	if (!root.isDirectory()) {
+    root.close();
 		Serial.println("Not a directory");
 		return;
 	}
@@ -36,14 +37,18 @@ void CSPIFFS::listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
 		}
 		file = root.openNextFile();
 	}
+  file.close();
+  root.close();
 }
 
 bool CSPIFFS::fileExists(fs::FS &fs, const char * path) {
   File file = fs.open(path);
   if (!(file && !file.isDirectory())) {
     //Serial.println("Failed to open file.");
+    if (file) file.close();
     return false;
   } else {
+    file.close();
     return true;
   }
 }
@@ -61,6 +66,7 @@ void CSPIFFS::readFile(fs::FS &fs, const char * path) {
 	while (file.available()) {
 		Serial.write(file.read());
 	}
+  file.close();
 }
 
 void CSPIFFS::writeFile(fs::FS &fs, const char * path, String message){
@@ -76,6 +82,7 @@ void CSPIFFS::writeFile(fs::FS &fs, const char * path, String message){
     } else {
         Serial.println("Write failed");
     }
+    file.close();
 }
 
 void CSPIFFS::appendFile(fs::FS &fs, const char * path, String message){
@@ -91,6 +98,7 @@ void CSPIFFS::appendFile(fs::FS &fs, const char * path, String message){
     } else {
         Serial.println("Append failed");
     }
+    file.close();
 }
 
 void CSPIFFS::renameFile(fs::FS &fs, const char * path1, const char * path2){
@@ -161,10 +169,15 @@ String CSPIFFS::getFile(fs::FS &fs, const char * path) {
     output += (char)file.read();
   }
 
+  file.close();
+
   return output;
 }
 
 int CSPIFFS::getFileSize(fs::FS &fs, const char * path) {
   File file = fs.open(path);
-  return file.size();
+  int size = file.size();
+  file.close();
+
+  return size;
 }
